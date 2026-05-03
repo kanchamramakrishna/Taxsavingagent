@@ -495,7 +495,7 @@ def hra_exempt_zero(percepts):
 
 def ask_yn(question: str) -> bool:
     """Ask a yes/no question. Returns True for yes."""
-    while True:
+    for _ in range(100):
         ans = input(f"  {question} (yes/no): ").strip().lower()
         if ans in ("yes", "y"):  return True
         if ans in ("no",  "n"): return False
@@ -505,7 +505,7 @@ def ask_amount(prompt: str, hint: str = "") -> float:
     """Ask for a rupee amount. Returns 0 if blank."""
     if hint:
         print(f"  ({hint})")
-    while True:
+    for _ in range(100):
         raw = input(f"  {prompt}: Rs. ").strip()
         if raw == "":
             return 0.0
@@ -600,7 +600,7 @@ def plain_language_cli():
 
     print("\n  What percentage is your 'Basic Pay' in your salary slip?")
     print("  (If you are not sure, just press Enter — we will use 40% which is standard)")
-    while True:
+    for _ in range(100):
         raw = input("  Basic Pay % [40]: ").strip()
         if raw == "":
             data["basic_pct"] = 40
@@ -716,7 +716,7 @@ def plain_language_cli():
 
     agent = TaxSavingAgent()
 
-    while True:
+    for _ in range(100):
 
         result = agent.run(data)
 

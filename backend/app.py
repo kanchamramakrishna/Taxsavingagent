@@ -340,8 +340,4 @@ def explore():
 
 # ── RUN ───────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    print("=" * 55)
-    print("  Tax Saving Agent — Flask API")
-    print("  http://localhost:5000")
-    print("=" * 55)
-    app.run(debug=True, port=5000)
+    print("This module is import-only for serverless deployment.")
