@@ -1,108 +1,166 @@
-# Tax Saving Recommendation Agent — AIKR S2026
+# Tax Saving Recommendation Agent
 
-## Architecture
+## Project Description
 
-```
+Tax Saving Recommendation Agent is a Flask + React web application that helps users estimate Indian income tax, compare old and new tax regimes, and discover possible tax-saving recommendations.
+
+The backend contains a rule-based tax agent with a knowledge base and inference engine. The frontend provides a browser-based form and interactive tax result view.
+
+## Folder Structure
+
+```txt
 project/
-├── backend/
-│   ├── tax_agent.py      ← AI Agent (Knowledge Base + Inference Engine)
-│   ├── app.py            ← Flask REST API server
-│   └── requirements.txt
-└── frontend/
-    └── index.html        ← React UI (calls the backend API)
+|-- api/
+|   |-- app.py              # Vercel Flask entrypoint and API routes
+|   |-- tax_agent.py        # Tax knowledge base and inference engine
+|   `-- requirements.txt
+|-- backend/
+|   |-- app.py              # Local/legacy backend copy
+|   |-- tax_agent.py
+|   `-- requirements.txt
+|-- frontend/
+|   `-- index.html          # React frontend
+|-- requirements.txt        # Vercel/root Python dependencies
+|-- vercel.json             # Vercel routing config
+`-- README.md
 ```
 
-The **Python agent** and the **React frontend** are completely separate.
-They communicate through a REST API:
+## Installation Steps
 
-```
-React (browser)  →  POST /api/calculate  →  Flask  →  TaxSavingAgent  →  JSON response
-```
+1. Clone or download the project.
 
----
-
-## How to Run
-
-### Step 1 — Start the Python Backend
+2. Open a terminal in the project root:
 
 ```bash
-cd backend
+cd project
+```
+
+3. Create and activate a virtual environment:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+4. Install dependencies:
+
+```bash
 pip install -r requirements.txt
-python app.py
 ```
 
-The API server starts at: `http://localhost:5000`
+## How to Run the Project
 
-You can verify it's running:
+### Run Locally
+
+From the project root:
+
+```bash
+python -m flask --app api.app run
 ```
-GET http://localhost:5000/api/health
+
+Open the website in your browser:
+
+```txt
+http://127.0.0.1:5000/
 ```
 
-### Step 2 — Open the React Frontend
+Useful backend routes:
 
-Just open the file in your browser:
+```txt
+GET  /api
+GET  /api/health
+GET  /api/status
+POST /api/calculate
+POST /api/explore
 ```
-frontend/index.html
+
+### Deploy on Vercel
+
+The project is configured for Vercel with `vercel.json`.
+
+Vercel routes all requests to:
+
+```txt
+api/app.py
 ```
-(double-click it, or drag it into Chrome/Firefox)
 
-The frontend will automatically call `http://localhost:5000/api/calculate` when you submit.
+After deployment:
 
----
+```txt
+/              serves the frontend website
+/api           backend health check
+/api/calculate backend tax calculation endpoint
+/api/explore   backend recommendation exploration endpoint
+```
 
-## API Reference
+## Example Input/Output
 
-### POST /api/calculate
+### Example Request
 
-**Request Body (JSON):**
+`POST /api/calculate`
+
 ```json
 {
-  "monthly_salary":   60000,
-  "basic_pct":        40,
-  "senior_self":      false,
-  "monthly_rent":     12000,
-  "is_metro":         false,
+  "monthly_salary": 60000,
+  "basic_pct": 40,
+  "senior_self": false,
+  "monthly_rent": 12000,
+  "is_metro": false,
   "home_emi_monthly": 0,
-  "edu_emi_monthly":  8000,
-  "has_epf":          true,
-  "ppf_annual":       0,
-  "elss_annual":      0,
-  "lic_annual":       24000,
-  "nsc_annual":       0,
-  "fd5yr_annual":     0,
-  "nps_annual":       0,
-  "health_self":      6000,
-  "health_parents":   0,
-  "senior_parents":   false,
+  "edu_emi_monthly": 8000,
+  "has_epf": true,
+  "ppf_annual": 0,
+  "elss_annual": 0,
+  "lic_annual": 24000,
+  "nsc_annual": 0,
+  "fd5yr_annual": 0,
+  "nps_annual": 0,
+  "health_self": 6000,
+  "health_parents": 0,
+  "senior_parents": false,
   "savings_interest": 2000
 }
 ```
 
-**Response (JSON):**
+### Example Response
+
 ```json
 {
   "success": true,
   "data": {
     "gross_annual": 720000,
-    "total_deductions": 289360,
-    "best_regime": "OLD",
+    "total_deductions": 179120,
+    "best_regime": "NEW",
     "you_save": 0,
-    "tax_old": { "taxable_income": 430640, "base_tax": 0, "rebate": 12500, "cess": 0, "total_tax": 0 },
-    "tax_new": { "taxable_income": 670000, "base_tax": 0, "rebate": 25000, "cess": 0, "total_tax": 0 },
-    "deductions": [...],
-    "suggestions": [...],
-    "fired_rules": ["STANDARD_DEDUCTION", "HRA", "80C", "80D", "80E", "80TTA"]
+    "tax_old": {
+      "taxable_income": 540880,
+      "base_tax": 20676,
+      "rebate": 0,
+      "surcharge": 0,
+      "cess": 827,
+      "total_tax": 21503
+    },
+    "tax_new": {
+      "taxable_income": 670000,
+      "base_tax": 0,
+      "rebate": 25000,
+      "surcharge": 0,
+      "cess": 0,
+      "total_tax": 0
+    },
+    "deductions": [],
+    "suggestions": [],
+    "structured_recs": [],
+    "fired_rules": []
   }
 }
 ```
 
----
+Actual values may vary based on the user input and tax rules in `api/tax_agent.py`.
 
-## AI Tool Usage Declaration
+## Notes
 
-| Field | Details |
-|---|---|
-| AI Tool Used | Claude (Anthropic) |
-| Purpose | Code structure, docstrings, rule verification |
-| AI-Generated | Initial scaffold, docstrings |
-| Self-Written | Full tax logic, KB rules, inference engine, API, UI |
+- The Flask app entrypoint is `api/app.py`.
+- The root route `/` serves the frontend website.
+- API routes are available under `/api/...`.
+- The project is designed to run safely on Vercel serverless functions.
