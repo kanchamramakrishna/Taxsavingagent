@@ -4,10 +4,13 @@ import os
 import sys
 import traceback
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 
 
 BASE_DIR = os.path.dirname(__file__)
+PROJECT_DIR = os.path.dirname(BASE_DIR)
+FRONTEND_DIR = os.path.join(PROJECT_DIR, "frontend")
+INDEX_HTML_PATH = os.path.join(FRONTEND_DIR, "index.html")
 TAX_AGENT_PATH = os.path.join(BASE_DIR, "tax_agent.py")
 
 logging.basicConfig(
@@ -217,7 +220,22 @@ def add_cors(response):
 
 @app.route("/")
 def home():
-    return {"status": "ok", "message": "Server running"}
+    try:
+        if os.path.exists(INDEX_HTML_PATH):
+            logger.info("Serving frontend index.html")
+            return send_from_directory(FRONTEND_DIR, "index.html")
+
+        logger.error("Frontend index.html missing at %s", INDEX_HTML_PATH)
+        return jsonify({"status": "ok", "message": "Server running", "frontend": "missing"}), 200
+    except Exception as exc:
+        logger.error("Failed to serve frontend: %s", exc)
+        logger.error(traceback.format_exc())
+        return jsonify({"status": "ok", "message": "Server running", "frontend": "error"}), 200
+
+
+@app.route("/api", methods=["GET"])
+def api_home():
+    return jsonify({"status": "ok", "message": "Server running"}), 200
 
 
 @app.route("/api/health", methods=["GET"])
@@ -392,6 +410,23 @@ def explore():
         logger.error("Explore failed: %s", exc)
         logger.error(traceback.format_exc())
         return jsonify({"success": False, "error": "Explore failed", "detail": str(exc)}), 200
+
+
+@app.route("/<path:path>", methods=["GET"])
+def frontend_fallback(path):
+    if path.startswith("api/"):
+        return jsonify({"error": "Not Found", "message": f"Route '/{path}' does not exist"}), 404
+
+    try:
+        if os.path.exists(INDEX_HTML_PATH):
+            logger.info("Serving frontend fallback for /%s", path)
+            return send_from_directory(FRONTEND_DIR, "index.html")
+
+        return jsonify({"status": "ok", "message": "Server running", "frontend": "missing"}), 200
+    except Exception as exc:
+        logger.error("Frontend fallback failed: %s", exc)
+        logger.error(traceback.format_exc())
+        return jsonify({"status": "ok", "message": "Server running", "frontend": "error"}), 200
 
 
 @app.errorhandler(404)
