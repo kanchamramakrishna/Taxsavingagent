@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tax Saving Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#06080b; --card:rgba(255,255,255,0.03); --border:rgba(255,255,255,0.07);
+      --green:#22c55e; --green-dim:rgba(34,197,94,0.12); --green-glow:rgba(34,197,94,0.25);
+      --amber:#f59e0b; --text:#e2ddd4; --muted:#6b7280; --faint:#1f2937;
+    }
+    body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;min-height:100vh;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(34,197,94,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(34,197,94,0.03) 1px,transparent 1px);background-size:48px 48px}
+    body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 10% 10%,rgba(34,197,94,0.07) 0%,transparent 50%),radial-gradient(ellipse at 90% 85%,rgba(245,158,11,0.05) 0%,transparent 50%)}
+    #root{position:relative;z-index:1}
+    .wrap{max-width:700px;margin:0 auto;padding:24px 18px 80px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:clamp(22px,5vw,40px);backdrop-filter:blur(8px);box-shadow:0 20px 60px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04)}
+    .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:999px;padding:5px 16px;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--green);font-family:monospace;margin-bottom:18px}
+    .pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+    h1{font-family:'DM Serif Display',serif;font-size:clamp(26px,5.5vw,42px);line-height:1.2;color:#f5f0e8}
+    h1 span{color:var(--green);font-style:italic}
+    .sub{color:var(--muted);margin-top:10px;line-height:1.65}
+    .progress{display:flex;gap:6px;margin-bottom:26px}
+    .prog-item{flex:1}
+    .prog-bar{height:3px;border-radius:2px;transition:background .4s}
+    .prog-bar.done{background:var(--green)}.prog-bar.todo{background:var(--faint)}
+    .prog-label{font-size:9px;text-align:center;margin-top:5px;text-transform:uppercase;letter-spacing:1px;transition:color .3s}
+    .step-emoji{font-size:38px;margin-bottom:10px;display:block}
+    .step-title{font-family:'DM Serif Display',serif;font-size:clamp(18px,4vw,24px);color:#f5f0e8;margin-bottom:8px}
+    .step-sub{color:var(--muted);font-size:14px;line-height:1.65;margin-bottom:26px}
+    label{display:block;font-family:monospace;font-size:12px;color:var(--muted);letter-spacing:.3px;margin-bottom:8px}
+    .money-wrap{position:relative}
+    .money-sym{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--green);font-weight:700;font-size:17px;pointer-events:none}
+    input[type=number],input[type=range]{font-family:'DM Sans',sans-serif}
+    input[type=number]{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:12px 14px 12px 34px;color:var(--text);font-size:16px;transition:border-color .2s;outline:none}
+    input[type=number]:focus{border-color:var(--green)}
+    input[type=number]::placeholder{color:#374151}
+    input[type=range]{width:100%;accent-color:var(--green);cursor:pointer}
+    .hint{font-size:12px;color:#374151;margin-top:6px;line-height:1.5}
+    .hint-green{color:var(--green)}
+    .yn-row{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+    .chip{padding:10px 20px;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;transition:all .2s;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--muted)}
+    .chip.on{background:var(--green-dim);border-color:var(--green);color:var(--green);font-weight:600}
+    .inv-card{width:100%;text-align:left;display:flex;align-items:center;gap:13px;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:12px;padding:13px 15px;cursor:pointer;transition:all .2s;font-family:inherit;margin-bottom:9px}
+    .inv-card.on{background:var(--green-dim);border-color:var(--green)}
+    .inv-card-body{flex:1}
+    .inv-card-title{font-size:15px;font-weight:600;color:var(--text)}
+    .inv-card.on .inv-card-title{color:var(--green)}
+    .inv-card-desc{font-size:12px;color:var(--muted);margin-top:2px}
+    .inv-check{width:20px;height:20px;border-radius:50%;border:2px solid #2d3748;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;flex-shrink:0;transition:all .2s}
+    .inv-card.on .inv-check{background:var(--green);border-color:var(--green)}
+    .inv-sub-input{margin-top:6px;padding-left:10px;animation:fadeUp .3s ease}
+    .nav{display:flex;justify-content:space-between;margin-top:18px;gap:12px}
+    .btn-primary{padding:13px 32px;border-radius:12px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;font-size:15px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;box-shadow:0 4px 20px var(--green-glow);transition:all .2s}
+    .btn-primary:disabled{background:#1a2a1a;color:#2d3d2d;box-shadow:none;cursor:not-allowed}
+    .btn-ghost{padding:11px 22px;border-radius:10px;border:1px solid var(--border);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--muted);transition:all .2s}
+    .btn-ghost:hover{border-color:#374151;color:var(--text)}
+    .hero-box{background:linear-gradient(135deg,rgba(34,197,94,.16),rgba(34,197,94,.04));border:1px solid rgba(34,197,94,.28);border-radius:18px;padding:28px 22px;text-align:center;margin-bottom:18px}
+    .hero-label{color:var(--muted);font-size:13px;margin-bottom:6px}
+    .hero-amt{font-family:'DM Serif Display',serif;font-size:clamp(38px,8vw,56px);color:var(--green);line-height:1}
+    .hero-note{color:#9ca3af;font-size:13px;margin-top:8px}
+    .regime-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+    .regime-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:18px 14px;text-align:center}
+    .regime-card.best{background:var(--green-dim);border-color:var(--green)}
+    .regime-label{color:var(--muted);font-size:12px}
+    .regime-amt{font-size:24px;font-weight:700;margin-top:6px;color:var(--text)}
+    .regime-card.best .regime-amt{color:var(--green)}
+    .regime-badge{font-size:11px;color:var(--green);margin-top:4px}
+    .amber-box{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.22);border-radius:12px;padding:13px 16px;text-align:center;color:#fde047;font-size:14px;margin-bottom:16px}
+    .section-label{font-family:monospace;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:12px}
+    .ded-row{display:flex;justify-content:space-between;align-items:flex-start;background:rgba(255,255,255,.025);border-radius:10px;padding:11px 14px;margin-bottom:7px}
+    .ded-label{font-size:14px;color:var(--text)}
+    .ded-note{font-size:11px;color:#374151;margin-top:2px}
+    .ded-amt{color:var(--green);font-weight:600;white-space:nowrap;margin-left:10px}
+    .ded-total{display:flex;justify-content:space-between;padding:10px 14px;border-top:1px solid rgba(255,255,255,.07);margin-top:4px}
+    .tax-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:14px}
+    .loading{text-align:center;padding:40px;color:var(--muted)}
+    .spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--faint);border-top-color:var(--green);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .error-box{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:12px;padding:16px;text-align:center;color:#f87171}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+    .fade-up{animation:fadeUp .35s ease both}
+    .mt-4{margin-top:16px}.mt-6{margin-top:24px}
+    .range-row{display:flex;align-items:center;gap:14px;margin-top:10px}
+    .range-val{color:var(--green);font-size:22px;font-weight:700;min-width:52px}
+    .rec-card{background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:10px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:14px}
+    .rec-card:hover{border-color:#374151;background:rgba(255,255,255,.04)}
+    .rec-card.done{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.05);cursor:default}
+    .rec-num{width:32px;height:32px;border-radius:50%;background:var(--faint);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;font-family:monospace}
+    .rec-card.done .rec-num{background:rgba(34,197,94,.2);color:var(--green)}
+    .rec-body{flex:1}
+    .rec-title{font-size:15px;font-weight:600;color:var(--text)}
+    .rec-card.done .rec-title{color:#9ca3af}
+    .rec-saved{font-size:12px;color:var(--green);margin-top:3px}
+    .rec-arrow{color:var(--muted);font-size:18px}
+    .rec-card.done .rec-arrow{color:var(--green)}
+    .explore-panel{background:rgba(255,255,255,.02);border:1px solid rgba(34,197,94,.2);border-radius:16px;padding:22px;margin-top:18px;animation:fadeUp .35s ease}
+    .explore-q{font-size:15px;font-weight:600;color:#f5f0e8;margin-bottom:12px;line-height:1.5}
+    .explore-opts{display:flex;flex-direction:column;gap:8px}
+    .opt-btn{padding:12px 16px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;text-align:left;transition:all .2s}
+    .opt-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-dim)}
+    .opt-btn.selected{border-color:var(--green);background:var(--green-dim);color:var(--green);font-weight:600}
+    .result-reveal{background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(34,197,94,.03));border:1px solid rgba(34,197,94,.3);border-radius:14px;padding:20px;margin-top:16px;animation:fadeUp .4s ease}
+    .reveal-instrument{font-family:'DM Serif Display',serif;font-size:20px;color:#f5f0e8;margin-bottom:10px}
+    .reveal-explanation{color:var(--muted);font-size:14px;line-height:1.65;margin-bottom:16px}
+    .reveal-savings-row{display:flex;gap:12px;flex-wrap:wrap}
+    .reveal-box{flex:1;min-width:120px;background:rgba(0,0,0,.2);border-radius:10px;padding:12px;text-align:center}
+    .reveal-box-label{font-size:11px;color:var(--muted);margin-bottom:4px}
+    .reveal-box-amt{font-size:20px;font-weight:700;color:var(--text)}
+    .reveal-box.saved .reveal-box-amt{color:var(--green)}
+    .final-box{background:linear-gradient(135deg,rgba(34,197,94,.2),rgba(34,197,94,.05));border:2px solid rgba(34,197,94,.4);border-radius:18px;padding:26px;text-align:center;margin-top:20px;animation:fadeUp .4s ease}
+    .final-title{font-family:'DM Serif Display',serif;font-size:22px;color:#f5f0e8;margin-bottom:6px}
+    .final-amt{font-family:'DM Serif Display',serif;font-size:clamp(32px,7vw,48px);color:var(--green);margin:8px 0}
+    .final-compare{display:flex;gap:16px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+    .final-compare-item{font-size:13px;color:var(--muted)}
+    .info-badge{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.15);border-radius:8px;padding:8px 13px;font-size:12px;color:#6b7280;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAX ENGINE  — JavaScript port of tax.py (Section 1–3)
+     All logic mirrors the Python InferenceEngine + TaxSavingAgent
+     No Flask / backend required.
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+// ── SECTION 1: KNOWLEDGE BASE ─────────────────────────────────────────────────
+const KB = {
+  "80C_LIMIT":              150000,
+  "NPS_EXTRA_LIMIT":         50000,
+  "80D": {
+    self_below_60:    25000,
+    self_senior:      50000,
+    parents_below_60: 25000,
+    parents_senior:   50000,
+  },
+  "HOME_LOAN_INTEREST_LIMIT": 200000,
+  "STANDARD_DEDUCTION":       50000,
+  "80TTA_LIMIT":              10000,
+  "80TTB_LIMIT":              50000,
+  "HRA_METRO_PCT":            0.50,
+  "HRA_NONMETRO_PCT":         0.40,
+  "HRA_BASIC_PCT":            0.10,
+  "EPF_PCT":                  0.12,
+  "HRA_OF_GROSS_PCT":         0.20,
+  "EMI_INTEREST_PCT":         0.70,
+  "EMI_PRINCIPAL_PCT":        0.30,
+  "EDU_INTEREST_PCT":         0.60,
+  "TAX_SLABS_OLD": [
+    {min:0,      max:250000,      rate:0.00},
+    {min:250001,  max:500000,     rate:0.05},
+    {min:500001,  max:1000000,    rate:0.20},
+    {min:1000001, max:Infinity,   rate:0.30},
+  ],
+  "TAX_SLABS_NEW": [
+    {min:0,      max:300000,      rate:0.00},
+    {min:300001,  max:600000,     rate:0.05},
+    {min:600001,  max:900000,     rate:0.10},
+    {min:900001,  max:1200000,    rate:0.15},
+    {min:1200001, max:1500000,    rate:0.20},
+    {min:1500001, max:Infinity,   rate:0.30},
+  ],
+  "REBATE_OLD": {limit:500000,  amount:12500},
+  "REBATE_NEW": {limit:700000,  amount:25000},
+  "SURCHARGE": [
+    {min:5000000,  max:10000000,  rate:0.10},
+    {min:10000001, max:20000000,  rate:0.15},
+    {min:20000001, max:50000000,  rate:0.25},
+    {min:50000001, max:Infinity,  rate:0.37},
+  ],
+  "CESS": 0.04,
+};
+
+// ── SECTION 2: INFERENCE ENGINE ───────────────────────────────────────────────
+function slabTax(taxable, regime) {
+  const slabs = regime === "old" ? KB.TAX_SLABS_OLD : KB.TAX_SLABS_NEW;
+  let tax = 0;
+  for (const s of slabs) {
+    if (taxable <= s.min - 1) break;
+    const inSlab = Math.min(taxable, s.max) - (s.min - 1);
+    tax += Math.max(0, inSlab) * s.rate;
+  }
+  return tax;
+}
+
+function calculateTax(gross, deductions, regime) {
+  const taxable  = Math.max(0, gross - deductions);
+  let baseTax    = slabTax(taxable, regime);
+  const rebRule  = regime === "old" ? KB.REBATE_OLD : KB.REBATE_NEW;
+  const rebate   = taxable <= rebRule.limit ? rebRule.amount : 0;
+  baseTax        = Math.max(0, baseTax - rebate);
+  let surcharge  = 0;
+  for (const t of KB.SURCHARGE) {
+    if (gross >= t.min && gross <= t.max) { surcharge = baseTax * t.rate; break; }
+  }
+  const cess     = (baseTax + surcharge) * KB.CESS;
+  const totalTax = baseTax + surcharge + cess;
+  return {
+    taxable_income: Math.round(taxable),
+    base_tax:       Math.round(baseTax),
+    rebate:         Math.round(rebate),
+    surcharge:      Math.round(surcharge),
+    cess:           Math.round(cess),
+    total_tax:      Math.round(totalTax),
+  };
+}
+
+function ruleStandardDeduction() {
+  return {label:"Standard Deduction (automatic for all employees)", amount: KB.STANDARD_DEDUCTION};
+}
+
+function ruleHRA(basic, hraReceived, monthlyRent, isMetro) {
+  if (monthlyRent <= 0 || hraReceived <= 0)
+    return {label:"Rent Exemption (HRA)", amount:0, note:"Not renting / no HRA in salary"};
+  const annualRent = monthlyRent * 12;
+  const metroPct   = isMetro ? KB.HRA_METRO_PCT : KB.HRA_NONMETRO_PCT;
+  const exempt     = Math.max(0, Math.min(
+    hraReceived,
+    annualRent - KB.HRA_BASIC_PCT * basic,
+    metroPct * basic
+  ));
+  return {label:"Rent Exemption (HRA)", amount: Math.round(exempt),
+          note:`Metro rate: ${Math.round(metroPct*100)}% of basic`};
+}
+
+function ruleInvestments80C(epf, ppf, elss, lic, nsc, fd5yr) {
+  const total  = epf + ppf + elss + lic + nsc + fd5yr;
+  const capped = Math.min(total, KB["80C_LIMIT"]);
+  const breakdown = {};
+  if(epf>0)   breakdown["PF / EPF (auto-deducted by employer)"] = Math.round(epf);
+  if(ppf>0)   breakdown["PPF"]  = Math.round(ppf);
+  if(elss>0)  breakdown["ELSS"] = Math.round(elss);
+  if(lic>0)   breakdown["LIC"]  = Math.round(lic);
+  if(nsc>0)   breakdown["NSC"]  = Math.round(nsc);
+  if(fd5yr>0) breakdown["5-Year Tax FD"] = Math.round(fd5yr);
+  return {label:"Your Investments (Sec 80C)", amount: Math.round(capped), breakdown,
+          note:`Total investments ₹${Math.round(total).toLocaleString("en-IN")} — capped at ₹1,50,000`};
+}
+
+function ruleNPSExtra(nps) {
+  return {label:"NPS Extra Deduction", amount: Math.round(Math.min(nps, KB.NPS_EXTRA_LIMIT)),
+          note:"Extra ₹50,000 deduction beyond all other investments"};
+}
+
+function ruleHealthInsurance(selfPremium, parentPremium, seniorSelf, seniorParents) {
+  const selfLimit   = seniorSelf    ? KB["80D"].self_senior    : KB["80D"].self_below_60;
+  const parentLimit = seniorParents ? KB["80D"].parents_senior : KB["80D"].parents_below_60;
+  const selfDed     = Math.min(selfPremium, selfLimit);
+  const parentDed   = Math.min(parentPremium, parentLimit);
+  return {label:"Health Insurance Premium", amount: Math.round(selfDed + parentDed),
+          breakdown:{"Your / family policy": Math.round(selfDed), "Parents' policy": Math.round(parentDed)}};
+}
+
+function ruleHomeLoan(monthlyEmi, existing80cUsed) {
+  if (monthlyEmi <= 0) return {label:"Home Loan", amount:0, principal_for_80c:0};
+  const annualEmi    = monthlyEmi * 12;
+  const interestPart = Math.min(annualEmi * KB.EMI_INTEREST_PCT, KB.HOME_LOAN_INTEREST_LIMIT);
+  const principalGap = Math.max(0, KB["80C_LIMIT"] - existing80cUsed);
+  const principalPart= Math.min(annualEmi * KB.EMI_PRINCIPAL_PCT, principalGap);
+  return {label:"Home Loan Interest", amount: Math.round(interestPart),
+          principal_for_80c: Math.round(principalPart),
+          note:"Interest portion of your EMI (auto-calculated)"};
+}
+
+function ruleEducationLoan(monthlyEmi) {
+  const interest = monthlyEmi * 12 * KB.EDU_INTEREST_PCT;
+  return {label:"Education Loan Interest", amount: Math.round(interest),
+          note:"Interest portion of your education EMI (auto-calculated)"};
+}
+
+function ruleSavingsInterest(interest, senior) {
+  const capped  = Math.min(interest, senior ? KB["80TTB_LIMIT"] : KB["80TTA_LIMIT"]);
+  const section = senior ? "80TTB (senior citizen)" : "80TTA";
+  return {label:`Savings Interest (${section})`, amount: Math.round(capped)};
+}
+
+// ── SECTION 3: AGENT ──────────────────────────────────────────────────────────
+function runTaxAgent(plainAnswers) {
+  // PERCEIVE
+  const monthly      = plainAnswers.monthly_salary;
+  const basic        = monthly * (plainAnswers.basic_pct / 100);
+  const gross        = monthly * 12;
+  const epf          = plainAnswers.has_epf ? basic * 12 * KB.EPF_PCT : 0;
+  const hraReceived  = gross * KB.HRA_OF_GROSS_PCT;
+
+  const p = {
+    gross, basic_annual: basic*12, hra_received: hraReceived,
+    monthly_rent:    plainAnswers.monthly_rent    || 0,
+    is_metro:        plainAnswers.is_metro        || false,
+    senior_self:     plainAnswers.senior_self     || false,
+    senior_parents:  plainAnswers.senior_parents  || false,
+    epf,
+    ppf:   plainAnswers.ppf_annual   || 0,
+    elss:  plainAnswers.elss_annual  || 0,
+    lic:   plainAnswers.lic_annual   || 0,
+    nsc:   plainAnswers.nsc_annual   || 0,
+    fd5yr: plainAnswers.fd5yr_annual || 0,
+    nps:   plainAnswers.nps_annual   || 0,
+    health_self:     plainAnswers.health_self    || 0,
+    health_parents:  plainAnswers.health_parents || 0,
+    home_emi:        plainAnswers.home_emi_monthly || 0,
+    edu_emi:         plainAnswers.edu_emi_monthly  || 0,
+    savings_interest:plainAnswers.savings_interest || 0,
+  };
+
+  // REASON — fire all deduction rules
+  const firedRules = [];
+  const fire = (key, amt) => { if(amt > 0) firedRules.push(key); return amt; };
+
+  const std    = ruleStandardDeduction();    fire("STANDARD_DEDUCTION", std.amount);
+  const hra    = ruleHRA(p.basic_annual, p.hra_received, p.monthly_rent, p.is_metro);
+  if(hra.amount>0) firedRules.push("HRA");
+  const inv    = ruleInvestments80C(p.epf, p.ppf, p.elss, p.lic, p.nsc, p.fd5yr);
+  if(inv.amount>0) firedRules.push("80C");
+  const nps    = ruleNPSExtra(p.nps);
+  if(nps.amount>0) firedRules.push("80CCD_1B");
+  const health = ruleHealthInsurance(p.health_self, p.health_parents, p.senior_self, p.senior_parents);
+  if(health.amount>0) firedRules.push("80D");
+  const home   = ruleHomeLoan(p.home_emi, inv.amount);
+  if(home.amount>0) firedRules.push("24B");
+  const edu    = ruleEducationLoan(p.edu_emi);
+  if(edu.amount>0) firedRules.push("80E");
+  const sav    = ruleSavingsInterest(p.savings_interest, p.senior_self);
+  if(sav.amount>0) firedRules.push(p.senior_self?"80TTB":"80TTA");
+
+  const deductions = [std, hra, inv, nps, health, home, edu, sav];
+  const totalOld   = deductions.reduce((s,d)=>s+d.amount, 0) + (home.principal_for_80c||0);
+  const totalNew   = KB.STANDARD_DEDUCTION;
+
+  // ACT — compute taxes for both regimes
+  const taxOld     = calculateTax(gross, totalOld, "old");
+  const taxNew     = calculateTax(gross, totalNew, "new");
+  const bestRegime = taxOld.total_tax <= taxNew.total_tax ? "OLD" : "NEW";
+  const youSave    = Math.abs(taxOld.total_tax - taxNew.total_tax);
+
+  // Gap analysis → suggestions
+  const used80c    = p.epf + p.ppf + p.elss + p.lic + p.nsc + p.fd5yr;
+  const gap80c     = Math.max(0, KB["80C_LIMIT"] - used80c);
+  const gapNPS     = Math.max(0, KB.NPS_EXTRA_LIMIT - p.nps);
+
+  // Build structured recommendations (for the explore UI)
+  const structuredRecs = [];
+  if (gap80c > 2000) {
+    const instruments = [];
+    if (p.elss === 0) instruments.push("ELSS mutual fund (3-yr lock-in, market-linked returns)");
+    if (p.ppf  === 0) instruments.push("PPF (safe, post office savings, 15-yr lock-in)");
+    if (instruments.length === 0) instruments.push("top up your existing investments");
+    const extraSaving = Math.round(gap80c * 0.20);
+    structuredRecs.push({
+      id: "80c_gap",
+      title: `Invest ₹${Math.round(gap80c).toLocaleString("en-IN")} more under Section 80C`,
+      subtitle: `Could save ~₹${extraSaving.toLocaleString("en-IN")} in tax`,
+      gap: gap80c,
+      instruments,
+      questions: [
+        {id:"instrument", text:"Which investment would you like to explore?",
+         options: instruments.concat(["I'll decide later"])},
+        {id:"timeline", text:"How comfortable are you with locking in money?",
+         options:["Short-term (1-3 years)", "Medium-term (3-7 years)", "Long-term (7+ years)"]},
+      ],
+    });
+  }
+  if (gapNPS > 2000) {
+    structuredRecs.push({
+      id: "nps_gap",
+      title: `Add ₹${Math.round(gapNPS).toLocaleString("en-IN")} to NPS for bonus deduction`,
+      subtitle: `Extra ₹50,000 deduction beyond all 80C investments`,
+      gap: gapNPS,
+      questions: [
+        {id:"nps_aware", text:"Are you aware that NPS gives an additional ₹50,000 deduction over and above all your other investments?",
+         options:["Yes, tell me more", "No, explain it to me"]},
+        {id:"nps_comfort", text:"NPS locks your money until age 60 — how do you feel about that?",
+         options:["Fine — it's for retirement anyway", "Prefer more flexibility", "Need to think about it"]},
+      ],
+    });
+  }
+  if (p.health_self < 5000) {
+    structuredRecs.push({
+      id: "health_gap",
+      title: "Get health insurance to save tax + protect your family",
+      subtitle: `₹6,000–10,000/year policy saves ₹1,200–3,000 in tax`,
+      questions: [
+        {id:"family_size", text:"How many family members would you like to cover?",
+         options:["Just myself","Myself + spouse","Myself + spouse + kids","Parents too"]},
+        {id:"budget", text:"What annual premium works for you?",
+         options:["Under ₹5,000","₹5,000–₹15,000","₹15,000–₹30,000","Above ₹30,000"]},
+      ],
+    });
+  }
+  if (p.monthly_rent > 0) {
+    // check if HRA exemption is zero despite paying rent
+    const hraVal = hra.amount;
+    if (hraVal === 0) {
+      structuredRecs.push({
+        id: "hra_restructure",
+        title: "Restructure salary to include HRA component",
+        subtitle: "Ask HR to add HRA — saves thousands every year",
+        questions: [
+          {id:"hr_contact", text:"Can you speak to your HR / payroll team about salary restructuring?",
+           options:["Yes, I can try","Not sure","No, fixed salary structure"]},
+        ],
+      });
+    }
+  }
+
+  // Explore simulation — given rec + user answers, compute new tax
+  const explore = (recId, answers) => {
+    const bestTax = bestRegime==="OLD" ? taxOld.total_tax : taxNew.total_tax;
+    let newAnswers = {...plainAnswers};
+    if (recId === "80c_gap") {
+      const instrument = answers.instrument || "";
+      if (instrument.includes("ELSS")) newAnswers.elss_annual = (newAnswers.elss_annual||0) + gap80c;
+      else if (instrument.includes("PPF")) newAnswers.ppf_annual = (newAnswers.ppf_annual||0) + gap80c;
+      else newAnswers.ppf_annual = (newAnswers.ppf_annual||0) + gap80c;
+      const newResult = runTaxAgent(newAnswers);
+      const newTax    = newResult.best_regime==="OLD" ? newResult.tax_old.total_tax : newResult.tax_new.total_tax;
+      return {instrument: instrument.split("(")[0].trim() || "80C Investment",
+              explanation:`By investing an additional ₹${Math.round(gap80c).toLocaleString("en-IN")} under Section 80C, you reduce your taxable income by that full amount, which cuts your tax at your marginal rate.`,
+              orig_tax: bestTax, new_tax: newTax, tax_saved: Math.max(0, bestTax - newTax)};
+    }
+    if (recId === "nps_gap") {
+      newAnswers.nps_annual = (newAnswers.nps_annual||0) + gapNPS;
+      const newResult = runTaxAgent(newAnswers);
+      const newTax    = newResult.best_regime==="OLD" ? newResult.tax_old.total_tax : newResult.tax_new.total_tax;
+      return {instrument:"NPS (National Pension Scheme)",
+              explanation:`NPS gives a separate ₹50,000 deduction under Sec 80CCD(1B) that is completely over and above your 80C limit. You're currently leaving ₹${Math.round(gapNPS).toLocaleString("en-IN")} unused.`,
+              orig_tax: bestTax, new_tax: newTax, tax_saved: Math.max(0, bestTax - newTax)};
+    }
+    if (recId === "health_gap") {
+      newAnswers.health_self = 8000;
+      const newResult = runTaxAgent(newAnswers);
+      const newTax    = newResult.best_regime==="OLD" ? newResult.tax_old.total_tax : newResult.tax_new.total_tax;
+      return {instrument:"Health Insurance (Mediclaim)",
+              explanation:`A basic health policy at ~₹8,000/year qualifies for Section 80D deduction. Besides the tax saving, it protects you from large medical bills.`,
+              orig_tax: bestTax, new_tax: newTax, tax_saved: Math.max(0, bestTax - newTax)};
+    }
+    if (recId === "hra_restructure") {
+      return {instrument:"HRA Salary Restructuring",
+              explanation:`If your employer adds an HRA component to your CTC (even without increasing total pay), you can claim an HRA exemption on your rent, which directly reduces taxable income.`,
+              orig_tax: bestTax, new_tax: bestTax, tax_saved: 0};
+    }
+    return {instrument:"Recommendation", explanation:"", orig_tax: bestTax, new_tax: bestTax, tax_saved: 0};
+  };
+
+  return {
+    gross_annual:      gross,
+    tax_old:           taxOld,
+    tax_new:           taxNew,
+    best_regime:       bestRegime,
+    you_save:          youSave,
+    deductions:        deductions.filter(d => d.amount > 0),
+    total_deductions:  totalOld,
+    fired_rules:       firedRules,
+    structured_recs:   structuredRecs,
+    original_answers:  plainAnswers,
+    explore,  // function for explore simulation
+  };
+}
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     REACT FRONTEND
+     ═══════════════════════════════════════════════════════════ -->
+<script type="text/babel">
+const { useState, useRef } = React;
+const fmt = n => Math.round(n||0).toLocaleString("en-IN");
+
+const INV_OPTIONS = [
+  {key:"epf",   hasKey:"has_epf",     label:"PF / EPF",           emoji:"🏛️", desc:"Company deducts from your salary every month.", auto:true},
+  {key:"ppf",   amtKey:"ppf_annual",  label:"PPF",                emoji:"📮", desc:"Post office savings, 15-year lock-in, very safe."},
+  {key:"elss",  amtKey:"elss_annual", label:"ELSS Mutual Fund",    emoji:"📊", desc:"Tax-saving mutual fund, 3-year lock-in."},
+  {key:"lic",   amtKey:"lic_annual",  label:"LIC / Life Insurance",emoji:"🛡️", desc:"Annual premium for your life insurance policy."},
+  {key:"nsc",   amtKey:"nsc_annual",  label:"NSC",                 emoji:"📜", desc:"National Savings Certificate from post office."},
+  {key:"fd5yr", amtKey:"fd5yr_annual",label:"5-Year Tax FD",       emoji:"🏦", desc:"Tax-saving fixed deposit, 5-year lock-in."},
+  {key:"nps",   amtKey:"nps_annual",  label:"NPS",                 emoji:"🎯", desc:"National Pension Scheme — extra deduction beyond all others."},
+];
+const STEPS = ["Income","Home","Savings","Health"];
+
+// ─── APP ──────────────────────────────────────────────────────────────────────
+function App() {
+  const [step,    setStep]   = useState(0);
+  const [fade,    setFade]   = useState(false);
+  const [loading, setLoad]   = useState(false);
+  const [result,  setResult] = useState(null);
+  const [error,   setError]  = useState(null);
+  const topRef = useRef(null);
+
+  const [form, setForm] = useState({
+    monthly_salary:"", basic_pct:40, senior_self:null,
+    monthly_rent:"", is_metro:null, home_emi_monthly:"", edu_emi_monthly:"",
+    has_epf:null, ppf_annual:"", elss_annual:"", lic_annual:"",
+    nsc_annual:"", fd5yr_annual:"", nps_annual:"",
+    health_self:"", health_parents:"", senior_parents:null, savings_interest:"",
+  });
+  const upd = (k,v) => setForm(p=>({...p,[k]:v}));
+
+  const canNext = () => {
+    if(step===0) return parseFloat(form.monthly_salary)>0 && form.senior_self!==null;
+    if(step===1) {
+      if(parseFloat(form.monthly_rent||0)>0 && form.is_metro===null) return false;
+      return true;
+    }
+    if(step===2) return true; // EPF is optional — null treated as false (no EPF)
+    if(step===3) return true;
+    return false;
+  };
+
+  const go = dir => {
+    setFade(true);
+    setTimeout(async ()=>{
+      if(dir===1 && step===STEPS.length-1){ await submit(); }
+      else setStep(s=>s+dir);
+      setFade(false);
+      topRef.current?.scrollIntoView({behavior:"smooth"});
+    },220);
+  };
+
+  // ── Submit: runs the JS tax engine directly (no HTTP call needed) ──────────
+  const submit = async () => {
+    setLoad(true); setError(null);
+    try {
+      // Short async tick so spinner renders
+      await new Promise(r => setTimeout(r, 350));
+      const payload = {
+        monthly_salary:   parseFloat(form.monthly_salary)||0,
+        basic_pct:        form.basic_pct,
+        senior_self:      form.senior_self===true,
+        monthly_rent:     parseFloat(form.monthly_rent)||0,
+        is_metro:         form.is_metro===true,
+        home_emi_monthly: parseFloat(form.home_emi_monthly)||0,
+        edu_emi_monthly:  parseFloat(form.edu_emi_monthly)||0,
+        has_epf:          form.has_epf===true,
+        ppf_annual:       parseFloat(form.ppf_annual)||0,
+        elss_annual:      parseFloat(form.elss_annual)||0,
+        lic_annual:       parseFloat(form.lic_annual)||0,
+        nsc_annual:       parseFloat(form.nsc_annual)||0,
+        fd5yr_annual:     parseFloat(form.fd5yr_annual)||0,
+        nps_annual:       parseFloat(form.nps_annual)||0,
+        health_self:      parseFloat(form.health_self)||0,
+        health_parents:   parseFloat(form.health_parents)||0,
+        senior_parents:   form.senior_parents===true,
+        savings_interest: parseFloat(form.savings_interest)||0,
+      };
+      // Call the JS tax engine (mirrors Python TaxSavingAgent.run())
+      const data = runTaxAgent(payload);
+      setResult(data);
+      setStep(STEPS.length);
+    } catch(e) {
+      setError(e.message);
+      setStep(STEPS.length);
+    }
+    setLoad(false);
+  };
+
+  const reset = () => { setStep(0); setResult(null); setError(null); };
+
+  return (
+    <div className="wrap" ref={topRef}>
+      <div style={{textAlign:"center",padding:"28px 0 32px"}}>
+        <div className="badge"><span className="pulse"/>&nbsp;Tax Saving Agent · FY 2025–26</div>
+        <h1>Find out how much tax<br/><span>you're overpaying</span></h1>
+        <p className="sub"></p>
+      </div>
+
+      {step<STEPS.length && (
+        <div className="progress">
+          {STEPS.map((s,i)=>(
+            <div className="prog-item" key={s}>
+              <div className={`prog-bar ${i<=step?"done":"todo"}`}/>
+              <div className="prog-label" style={{color:i===step?"#22c55e":"#374151"}}>{s}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="card" style={{opacity:fade?0:1,transform:fade?"translateY(8px)":"none",transition:"opacity .22s,transform .22s"}}>
+        {step===0 && <StepIncome  form={form} upd={upd}/>}
+        {step===1 && <StepHome    form={form} upd={upd}/>}
+        {step===2 && <StepSavings form={form} upd={upd}/>}
+        {step===3 && <StepHealth  form={form} upd={upd}/>}
+        {step===STEPS.length && loading && <Loading/>}
+        {step===STEPS.length && !loading && error  && <ErrorBox msg={error} onRedo={reset}/>}
+        {step===STEPS.length && !loading && result && <Results data={result} onRedo={reset}/>}
+      </div>
+
+      {step<STEPS.length && (
+        <div className="nav">
+          {step>0?<button className="btn-ghost" onClick={()=>go(-1)}>← Back</button>:<div/>}
+          <button className="btn-primary" disabled={!canNext()} onClick={()=>go(1)}>
+            {step===STEPS.length-1?"Calculate My Tax →":"Continue →"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── RESULTS ──────────────────────────────────────────────────────────────────
+// Mirrors Python: while True { run() → show → ask modify → modify_investments() → recalculate }
+
+const MODIFY_OPTIONS = [
+  {key:"ppf_annual",   label:"PPF",               emoji:"📮", hint:"Annual amount (₹)"},
+  {key:"elss_annual",  label:"ELSS Mutual Fund",   emoji:"📊", hint:"Annual amount (₹)"},
+  {key:"lic_annual",   label:"LIC / Life Insurance",emoji:"🛡️", hint:"Annual premium (₹)"},
+  {key:"nps_annual",   label:"NPS",                emoji:"🎯", hint:"Annual contribution (₹)"},
+  {key:"health_self",  label:"Health Insurance",   emoji:"🏥", hint:"Annual premium (₹)"},
+];
+
+function ModifyPanel({answers, onRecalculate, onLock, iteration}) {
+  const [selected, setSelected] = React.useState(null);
+  const [action,   setAction]   = React.useState(null); // 'add' | 'replace'
+  const [amount,   setAmount]   = React.useState("");
+  const [error,    setError]    = React.useState("");
+
+  const reset = () => { setSelected(null); setAction(null); setAmount(""); setError(""); };
+
+  const confirm = () => {
+    const val = parseFloat(amount);
+    if (!val || val <= 0) { setError("Please enter a valid amount."); return; }
+    const newAnswers = {...answers};
+    if (action === "add")     newAnswers[selected.key] = (newAnswers[selected.key]||0) + val;
+    if (action === "replace") newAnswers[selected.key] = val;
+    reset();
+    onRecalculate(newAnswers);
+  };
+
+  return (
+    <div style={{marginTop:24}}>
+      <div style={{background:"rgba(34,197,94,0.06)",border:"1px solid rgba(34,197,94,0.2)",borderRadius:16,padding:"20px 18px"}}>
+        <div style={{fontFamily:"monospace",fontSize:10,textTransform:"uppercase",letterSpacing:"2px",color:"var(--muted)",marginBottom:12}}>
+          🔄 Round {iteration+1} — Modify &amp; Recalculate
+        </div>
+        <div style={{fontSize:15,fontWeight:600,color:"#f5f0e8",marginBottom:6}}>
+          Want to invest more and see how much more you save?
+        </div>
+        <div style={{fontSize:13,color:"var(--muted)",marginBottom:18,lineHeight:1.6}}>
+          Mirrors the Python agent loop — pick an investment to increase, then recalculate.
+        </div>
+
+        {!selected && (
+          <div>
+            <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+              {MODIFY_OPTIONS.map(opt => {
+                const cur = answers[opt.key]||0;
+                return (
+                  <button key={opt.key}
+                    onClick={()=>setSelected(opt)}
+                    style={{
+                      display:"flex",alignItems:"center",gap:12,
+                      background:"rgba(255,255,255,0.025)",border:"1px solid var(--border)",
+                      borderRadius:10,padding:"11px 14px",cursor:"pointer",
+                      fontFamily:"inherit",transition:"all .2s",textAlign:"left"
+                    }}
+                    onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(34,197,94,0.4)";e.currentTarget.style.background="rgba(34,197,94,0.06)";}}
+                    onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--border)";e.currentTarget.style.background="rgba(255,255,255,0.025)";}}
+                  >
+                    <span style={{fontSize:20}}>{opt.emoji}</span>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:14,fontWeight:600,color:"var(--text)"}}>{opt.label}</div>
+                      <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>
+                        Current: {cur > 0 ? `₹${Math.round(cur).toLocaleString("en-IN")}/yr` : "Not invested"}
+                      </div>
+                    </div>
+                    <span style={{color:"var(--muted)",fontSize:16}}>›</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button className="btn-ghost" style={{width:"100%",textAlign:"center"}} onClick={onLock}>
+              ✅ Final plan locked — I'm done
+            </button>
+          </div>
+        )}
+
+        {selected && !action && (
+          <div style={{animation:"fadeUp .3s ease"}}>
+            <div style={{fontSize:14,color:"var(--muted)",marginBottom:12}}>
+              You selected: <strong style={{color:"var(--green)"}}>{selected.emoji} {selected.label}</strong>
+              {(answers[selected.key]||0) > 0 && <span> (currently ₹{Math.round(answers[selected.key]).toLocaleString("en-IN")}/yr)</span>}
+            </div>
+            <div style={{display:"flex",gap:10,marginBottom:12}}>
+              <button className="chip" style={{flex:1}} onClick={()=>setAction("add")}>
+                ➕ Add more on top
+              </button>
+              <button className="chip" style={{flex:1}} onClick={()=>setAction("replace")}>
+                🔄 Replace with new value
+              </button>
+            </div>
+            <button className="btn-ghost" style={{fontSize:12,padding:"6px 14px"}} onClick={reset}>← Back</button>
+          </div>
+        )}
+
+        {selected && action && (
+          <div style={{animation:"fadeUp .3s ease"}}>
+            <div style={{fontSize:14,color:"var(--muted)",marginBottom:10}}>
+              {action==="add" ? "How much more to add to" : "Replace current value with:"}{" "}
+              <strong style={{color:"var(--green)"}}>{selected.label}</strong>?
+            </div>
+            <div className="money-wrap" style={{marginBottom:8}}>
+              <span className="money-sym">₹</span>
+              <input type="number" placeholder={selected.hint} value={amount}
+                onChange={e=>{setAmount(e.target.value);setError("");}}
+                style={{width:"100%",background:"rgba(255,255,255,.04)",border:"1px solid var(--border)",borderRadius:10,padding:"12px 14px 12px 34px",color:"var(--text)",fontSize:16,outline:"none"}}
+                onFocus={e=>e.target.style.borderColor="var(--green)"}
+                onBlur={e=>e.target.style.borderColor="var(--border)"}
+              />
+            </div>
+            {error && <div style={{color:"#f87171",fontSize:12,marginBottom:8}}>{error}</div>}
+            <div style={{display:"flex",gap:10}}>
+              <button className="btn-primary" style={{flex:1}} onClick={confirm}>
+                🔄 Recalculate →
+              </button>
+              <button className="btn-ghost" onClick={reset}>← Back</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Results({data, onRedo}) {
+  // iteration state — mirrors Python while loop
+  const [history,   setHistory]   = React.useState([data]);  // each entry = runTaxAgent result
+  const [answers,   setAnswers]   = React.useState(data.original_answers);
+  const [locked,    setLocked]    = React.useState(false);
+  const [flash,     setFlash]     = React.useState(false);
+  const summaryRef  = React.useRef(null);
+
+  const current     = history[history.length - 1];
+  const iteration   = history.length - 1;
+
+  const {gross_annual, tax_old, tax_new, best_regime, you_save,
+         deductions, total_deductions, fired_rules, structured_recs} = current;
+  const bestTax = best_regime==="OLD" ? tax_old.total_tax : tax_new.total_tax;
+  const noMoreSuggestions = structured_recs.length === 0;
+
+  // Mirrors Python: result = agent.run(data); if not result["suggestions"]: break
+  const handleRecalculate = (newAnswers) => {
+    const newResult = runTaxAgent(newAnswers);
+    setAnswers(newAnswers);
+    setHistory(h => [...h, newResult]);
+    setFlash(true);
+    setTimeout(() => setFlash(false), 600);
+    setTimeout(() => summaryRef.current?.scrollIntoView({behavior:"smooth"}), 100);
+  };
+
+  const handleLock = () => setLocked(true);
+
+  const firstTax  = best_regime==="OLD" ? history[0].tax_old.total_tax : history[0].tax_new.total_tax;
+  const totalSaved = Math.max(0, firstTax - bestTax);
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{textAlign:"center",marginBottom:20}} ref={summaryRef}>
+        <div style={{fontSize:44}}>🎯</div>
+        <h1 style={{fontSize:26,margin:"10px 0 4px"}}>Your Tax Picture</h1>
+        <p style={{color:"var(--muted)",fontSize:14}}>Annual Income: ₹{fmt(gross_annual)} · FY 2025–26</p>
+        {iteration > 0 && (
+          <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(34,197,94,0.1)",border:"1px solid rgba(34,197,94,0.25)",borderRadius:999,padding:"4px 14px",fontSize:11,fontFamily:"monospace",color:"var(--green)",marginTop:8,letterSpacing:1}}>
+            ↺ Recalculation #{iteration}
+          </div>
+        )}
+      </div>
+
+      <div className="info-badge">
+        <span style={{color:"#22c55e"}}>⚡</span>
+        Modify investments and recalculate live.
+      </div>
+
+      {/* Hero — flashes green on recalculate */}
+      <div className="hero-box" style={{
+        transition:"box-shadow .4s",
+        boxShadow: flash ? "0 0 30px rgba(34,197,94,0.4)" : "none",
+        padding:"22px 18px"
+      }}>
+        <div className="hero-label">Best Tax For You · {best_regime} Regime</div>
+        <div className="hero-amt" style={{transition:"color .3s"}}>₹{fmt(bestTax)}</div>
+        <div className="hero-note">₹{fmt(Math.round(bestTax/12))}/month</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:16}}>
+          {[{label:"Old Regime",r:"OLD",tax:tax_old.total_tax},{label:"New Regime",r:"NEW",tax:tax_new.total_tax}].map(x=>(
+            <div key={x.r} style={{
+              background: best_regime===x.r ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.04)",
+              border: "1px solid " + (best_regime===x.r ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.07)"),
+              borderRadius:10, padding:"10px 12px", textAlign:"center"
+            }}>
+              <div style={{fontSize:11,color:"var(--muted)",fontFamily:"monospace",letterSpacing:1}}>{x.label}</div>
+              <div style={{fontSize:20,fontWeight:700,color: best_regime===x.r ? "var(--green)" : "var(--text)",margin:"4px 0"}}>₹{fmt(x.tax)}</div>
+              {best_regime===x.r
+                ? <div style={{fontSize:10,color:"var(--green)",fontFamily:"monospace"}}>✓ BEST FOR YOU</div>
+                : <div style={{fontSize:10,color:"#4b5563",fontFamily:"monospace"}}>+₹{fmt(you_save)} more</div>
+              }
+            </div>
+          ))}
+        </div>
+        {iteration > 0 && totalSaved > 0 && (
+          <div style={{marginTop:12,background:"rgba(34,197,94,0.15)",borderRadius:8,padding:"6px 12px",display:"inline-block",fontSize:13,color:"var(--green)",fontWeight:600}}>
+            ↓ Saved ₹{fmt(totalSaved)} from your original estimate
+          </div>
+        )}
+      </div>
+
+      {/* ── DEDUCTIONS TABLE — mirrors Python "+ label   Rs. amount" format ── */}
+      <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid var(--border)",borderRadius:16,padding:"20px 18px",marginBottom:18,fontFamily:"monospace"}}>
+        <div style={{fontSize:10,textTransform:"uppercase",letterSpacing:"2px",color:"var(--muted)",marginBottom:14}}>
+          What we deducted from your income (Old Regime)
+        </div>
+
+        {deductions.filter(d=>d.amount>0).map((d,i)=>(
+          <div key={i} style={{marginBottom:6}}>
+            {/* Main deduction row */}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:8}}>
+              <span style={{color:"var(--green)",fontSize:13,flexShrink:0}}>+</span>
+              <span style={{flex:1,fontSize:13,color:"var(--text)"}}>{d.label}</span>
+              <span style={{fontSize:13,color:"var(--green)",fontWeight:600,whiteSpace:"nowrap"}}>Rs. {fmt(d.amount)}</span>
+            </div>
+            {/* Breakdown sub-rows */}
+            {d.breakdown&&Object.entries(d.breakdown).filter(([,v])=>v>0).map(([k,v])=>(
+              <div key={k} style={{display:"flex",justifyContent:"space-between",paddingLeft:18,marginTop:2}}>
+                <span style={{fontSize:11,color:"#4b5563"}}>→ {k}</span>
+                <span style={{fontSize:11,color:"#4b5563",whiteSpace:"nowrap"}}>Rs. {fmt(v)}</span>
+              </div>
+            ))}
+          </div>
+        ))}
+
+        {/* Divider + Total */}
+        <div style={{borderTop:"1px solid rgba(255,255,255,0.08)",marginTop:10,paddingTop:10,display:"flex",justifyContent:"space-between"}}>
+          <span style={{fontSize:13,color:"var(--muted)"}}>Total removed from your taxable income</span>
+          <span style={{fontSize:14,color:"var(--green)",fontWeight:700}}>Rs. {fmt(total_deductions)}</span>
+        </div>
+      </div>
+
+      {/* ── TWO-COLUMN TAX COMPARISON — mirrors Python Old Regime | New Regime table ── */}
+      <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid var(--border)",borderRadius:16,padding:"20px 18px",marginBottom:18,fontFamily:"monospace"}}>
+        <div style={{fontSize:10,textTransform:"uppercase",letterSpacing:"2px",color:"var(--muted)",marginBottom:14}}>
+          How your tax is calculated
+        </div>
+
+        {/* Column headers */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr auto auto",gap:"0 20px",marginBottom:8,paddingBottom:8,borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+          <div/>
+          <div style={{fontSize:11,color:"var(--muted)",textAlign:"right",minWidth:90}}>Old Regime</div>
+          <div style={{fontSize:11,color:"var(--muted)",textAlign:"right",minWidth:90}}>New Regime</div>
+        </div>
+
+        {/* Data rows */}
+        {[
+          {label:"Taxable Income after deductions", ok:"taxable_income", nk:"taxable_income"},
+          {label:"Tax on that income",              ok:"base_tax",       nk:"base_tax"},
+          {label:"Minus rebate from government",    ok:"rebate",         nk:"rebate"},
+          {label:"Health & Education Cess (4%)",    ok:"cess",           nk:"cess"},
+          {label:"TOTAL TAX YOU PAY",               ok:"total_tax",      nk:"total_tax", bold:true},
+        ].map(({label,ok,nk,bold},i)=>{
+          const ov = tax_old[ok], nv = tax_new[nk];
+          const isOldBest = best_regime==="OLD";
+          return (
+            <div key={i} style={{
+              display:"grid",gridTemplateColumns:"1fr auto auto",gap:"0 20px",
+              padding:"7px 0",
+              borderBottom: i<4 ? "1px solid rgba(255,255,255,0.04)" : "none",
+              background: bold ? "rgba(34,197,94,0.05)" : "transparent",
+              borderRadius: bold ? 6 : 0,
+              marginLeft: bold ? -6 : 0, marginRight: bold ? -6 : 0,
+              paddingLeft: bold ? 6 : 0, paddingRight: bold ? 6 : 0,
+            }}>
+              <span style={{
+                fontSize: bold ? 13 : 12,
+                color: bold ? "#f5f0e8" : "var(--muted)",
+                fontWeight: bold ? 700 : 400,
+                display:"flex",alignItems:"center",gap:5
+              }}>
+                {bold && <span style={{color:"var(--green)"}}>⇒</span>}
+                {label}
+              </span>
+              {/* Old Regime value */}
+              <span style={{
+                fontSize: bold ? 14 : 12,
+                fontWeight: bold ? 700 : 400,
+                color: bold ? (isOldBest ? "var(--green)" : "#f87171") : "var(--text)",
+                textAlign:"right",minWidth:90,whiteSpace:"nowrap",
+                textDecoration: bold && !isOldBest ? "line-through" : "none",
+                opacity: bold && !isOldBest ? 0.5 : 1,
+              }}>
+                Rs. {fmt(ov)}
+                {bold && isOldBest && <span style={{fontSize:9,marginLeft:4,color:"var(--green)"}}>✓</span>}
+              </span>
+              {/* New Regime value */}
+              <span style={{
+                fontSize: bold ? 14 : 12,
+                fontWeight: bold ? 700 : 400,
+                color: bold ? (!isOldBest ? "var(--green)" : "#f87171") : "var(--text)",
+                textAlign:"right",minWidth:90,whiteSpace:"nowrap",
+                textDecoration: bold && isOldBest ? "line-through" : "none",
+                opacity: bold && isOldBest ? 0.5 : 1,
+              }}>
+                Rs. {fmt(nv)}
+                {bold && !isOldBest && <span style={{fontSize:9,marginLeft:4,color:"var(--green)"}}>✓</span>}
+              </span>
+            </div>
+          );
+        })}
+
+        {/* Best regime callout */}
+        <div style={{marginTop:14,padding:"10px 14px",background:best_regime==="OLD"?"rgba(34,197,94,0.1)":"rgba(34,197,94,0.1)",border:"1px solid rgba(34,197,94,0.25)",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{fontSize:12,color:"var(--green)",fontWeight:600}}>
+            USE THE {best_regime} TAX REGIME
+          </span>
+          <span style={{fontSize:13,color:"var(--text)",fontWeight:700}}>
+            You pay only Rs. {fmt(bestTax)}
+            {you_save>500 && <span style={{fontSize:11,color:"var(--muted)",marginLeft:8}}>(saves Rs. {fmt(you_save)} vs other regime)</span>}
+          </span>
+        </div>
+      </div>
+
+      {/* Suggestions — mirrors Python agent suggestions list */}
+      {structured_recs.length > 0 && (
+        <div style={{marginBottom:8}}>
+          <div className="section-label">What you can additionally do to save more</div>
+          {structured_recs.map((rec, i) => (
+            <div key={rec.id} style={{
+              display:"flex",alignItems:"flex-start",gap:12,
+              background:"rgba(245,158,11,0.06)",border:"1px solid rgba(245,158,11,0.18)",
+              borderRadius:12,padding:"13px 15px",marginBottom:9
+            }}>
+              <div style={{width:26,height:26,borderRadius:"50%",background:"rgba(245,158,11,0.15)",color:"#f59e0b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,fontFamily:"monospace",flexShrink:0,marginTop:1}}>
+                {i+1}
+              </div>
+              <div>
+                <div style={{fontSize:14,fontWeight:600,color:"var(--text)",lineHeight:1.4}}>{rec.title}</div>
+                <div style={{fontSize:12,color:"var(--muted)",marginTop:3}}>{rec.subtitle}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── THE LOOP: mirrors Python while True block ── */}
+      {!locked && !noMoreSuggestions && (
+        <ModifyPanel
+          answers={answers}
+          onRecalculate={handleRecalculate}
+          onLock={handleLock}
+          iteration={iteration}
+        />
+      )}
+
+      {/* Optimal / locked state — mirrors Python break conditions */}
+      {(locked || noMoreSuggestions) && (
+        <div className="final-box" style={{marginTop:16}}>
+          {noMoreSuggestions ? (
+            <>
+              <div className="final-title">🎉 Already Fully Optimised!</div>
+              <div style={{color:"var(--muted)",fontSize:13,marginTop:4}}>
+                There are no additional deductions available based on your inputs.
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="final-title">✅ Final Plan Locked</div>
+              <div style={{color:"var(--muted)",fontSize:13,marginTop:4}}>
+                {iteration > 0 ? `After ${iteration} recalculation${iteration>1?"s":""}` : "Your current tax is optimised"}
+              </div>
+            </>
+          )}
+          <div className="final-amt">₹{fmt(bestTax)}</div>
+          {totalSaved > 0 && (
+            <div className="final-compare">
+              <div className="final-compare-item">Started at: <span style={{color:"#9ca3af"}}>₹{fmt(firstTax)}</span></div>
+              <div className="final-compare-item">Total Saved: <span style={{color:"var(--green)"}}>₹{fmt(totalSaved)}</span></div>
+              <div className="final-compare-item">Monthly: <span>₹{fmt(Math.round(totalSaved/12))}/mo</span></div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Iteration history — shows audit trail like Python fired_rules */}
+      {history.length > 1 && (
+        <div style={{marginTop:20,marginBottom:8}}>
+          <div className="section-label">Recalculation History</div>
+          {history.map((h, i) => {
+            const t = h.best_regime==="OLD" ? h.tax_old.total_tax : h.tax_new.total_tax;
+            const prev = i>0 ? (history[i-1].best_regime==="OLD" ? history[i-1].tax_old.total_tax : history[i-1].tax_new.total_tax) : t;
+            const saved = Math.max(0, prev - t);
+            return (
+              <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(255,255,255,.02)",borderRadius:8,padding:"8px 12px",marginBottom:5,fontSize:13}}>
+                <span style={{color:"var(--muted)",fontFamily:"monospace",fontSize:11}}>
+                  {i===0 ? "Initial" : `Round ${i}`}
+                </span>
+                <span style={{color:"var(--text)"}}>₹{fmt(t)}</span>
+                {saved > 0 && <span style={{color:"var(--green)",fontSize:12}}>↓ ₹{fmt(saved)} saved</span>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Agent rules fired */}
+      <div style={{marginTop:16,marginBottom:20}}>
+        <div className="section-label">Agent Rules Fired</div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+          {fired_rules.map(r=>(
+            <span key={r} style={{background:"var(--faint)",borderRadius:6,padding:"4px 10px",fontSize:11,fontFamily:"monospace",color:"#4ade80"}}>{r}</span>
+          ))}
+        </div>
+      </div>
+
+      <button className="btn-ghost" style={{width:"100%",textAlign:"center"}} onClick={onRedo}>↩ Start over with different numbers</button>
+      <p style={{color:"#1f2937",fontSize:11,textAlign:"center",marginTop:14,lineHeight:1.6}}>
+        Estimates based on standard assumptions. Consult a CA for exact filing.<br/>
+         
+      </p>
+    </div>
+  );
+}
+
+// ─── FORM STEPS ───────────────────────────────────────────────────────────────
+function StepIncome({form,upd}){
+  const monthly=parseFloat(form.monthly_salary)||0;
+  return(
+    <div>
+      <span className="step-emoji">💵</span>
+      <div className="step-title">What's your monthly salary?</div>
+      <div className="step-sub">The amount that lands in your bank every month — or your gross salary on your payslip.</div>
+      <label>Monthly salary (₹)</label>
+      <div className="money-wrap"><span className="money-sym">₹</span>
+        <input type="number" placeholder="e.g. 55000" value={form.monthly_salary} onChange={e=>upd("monthly_salary",e.target.value)}/>
+      </div>
+      {monthly>0&&<div className="hint">That's <span className="hint-green">₹{fmt(monthly*12)}</span> per year</div>}
+      <div className="mt-6">
+        <label>What % is your "Basic Pay"? <span style={{color:"#4b5563",fontWeight:300}}>(unsure? leave at 40%)</span></label>
+        <div className="range-row">
+          <input type="range" min={25} max={65} value={form.basic_pct} onChange={e=>upd("basic_pct",+e.target.value)} style={{flex:1}}/>
+          <span className="range-val">{form.basic_pct}%</span>
+        </div>
+        <div className="hint">Basic = ₹{fmt(monthly*form.basic_pct/100)}/mo · EPF auto-calculated as 12% of this</div>
+      </div>
+      <div className="mt-6">
+        <label>Are you 60 or older?</label>
+        <div className="yn-row">
+          <button className={`chip ${form.senior_self===true?"on":""}`}  onClick={()=>upd("senior_self",true)}>Yes, I'm 60+</button>
+          <button className={`chip ${form.senior_self===false?"on":""}`} onClick={()=>upd("senior_self",false)}>No, below 60</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StepHome({form,upd}){
+  const paysRent=parseFloat(form.monthly_rent||0)>0;
+  const hasHome=parseFloat(form.home_emi_monthly||0)>0;
+  const hasEdu=parseFloat(form.edu_emi_monthly||0)>0;
+  return(
+    <div>
+      <span className="step-emoji">🏠</span>
+      <div className="step-title">Your home situation</div>
+      <div className="step-sub">Rent and EMIs both reduce your tax. Enter monthly numbers</div>
+      <label>Monthly rent you pay (₹) — 0 if you don't rent</label>
+      <div className="money-wrap"><span className="money-sym">₹</span>
+        <input type="number" placeholder="0" value={form.monthly_rent} onChange={e=>upd("monthly_rent",e.target.value)}/>
+      </div>
+      {paysRent&&(
+        <div className="fade-up mt-4">
+          <label>City type?</label>
+          <div className="yn-row">
+            <button className={`chip ${form.is_metro===true?"on":""}`}  onClick={()=>upd("is_metro",true)}>🏙️ Mumbai / Delhi / Kolkata / Chennai</button>
+            <button className={`chip ${form.is_metro===false?"on":""}`} onClick={()=>upd("is_metro",false)}>🏘️ Any other city</button>
+          </div>
+        </div>
+      )}
+      <div className="mt-6">
+        <label>Home loan EMI per month (₹) — 0 if none</label>
+        <div className="money-wrap"><span className="money-sym">₹</span>
+          <input type="number" placeholder="0" value={form.home_emi_monthly} onChange={e=>upd("home_emi_monthly",e.target.value)}/>
+        </div>
+        {hasHome&&<div className="hint fade-up">We auto-split into interest and principal.</div>}
+      </div>
+      <div className="mt-6">
+        <label>Education loan EMI per month (₹) — 0 if none</label>
+        <div className="money-wrap"><span className="money-sym">₹</span>
+          <input type="number" placeholder="0" value={form.edu_emi_monthly} onChange={e=>upd("edu_emi_monthly",e.target.value)}/>
+        </div>
+        {hasEdu&&<div className="hint fade-up">We auto-calculate the interest portion.</div>}
+      </div>
+    </div>
+  );
+}
+
+function StepSavings({form,upd}){
+  return(
+    <div>
+      <span className="step-emoji">📈</span>
+      <div className="step-title">Your savings &amp; investments</div>
+      <div className="step-sub">Tap everything that applies. Even if your company does it automatically, select it.</div>
+      <button className={`inv-card ${form.has_epf===true?"on":""}`} onClick={()=>upd("has_epf",form.has_epf===true?false:true)}>
+        <span style={{fontSize:24}}>🏛️</span>
+        <div className="inv-card-body"><div className="inv-card-title">PF / EPF</div><div className="inv-card-desc">Company deducts from your salary every month.</div></div>
+        <div className="inv-check">{form.has_epf===true?"✓":""}</div>
+      </button>
+      {form.has_epf===true&&<div className="hint fade-up" style={{marginTop:"-4px",marginBottom:"8px",paddingLeft:"12px",color:"var(--green)"}}>✓ Auto-calculated as 12% of your basic pay</div>}
+      {!form.has_epf&&<div className="hint" style={{marginTop:"-4px",marginBottom:"8px",paddingLeft:"12px"}}>Not selected — tap if your employer deducts PF. You can skip this if it does not apply.</div>}
+      {INV_OPTIONS.slice(1).map(inv=>{
+        const on=!!parseFloat(form[inv.amtKey]||0)||form[`_sel_${inv.key}`];
+        return(
+          <div key={inv.key}>
+            <button className={`inv-card ${on?"on":""}`} onClick={()=>{if(on){upd(inv.amtKey,"");upd(`_sel_${inv.key}`,false);}else upd(`_sel_${inv.key}`,true);}}>
+              <span style={{fontSize:24}}>{inv.emoji}</span>
+              <div className="inv-card-body"><div className="inv-card-title">{inv.label}</div><div className="inv-card-desc">{inv.desc}</div></div>
+              <div className="inv-check">{on?"✓":""}</div>
+            </button>
+            {on&&(
+              <div className="inv-sub-input">
+                <div className="money-wrap"><span className="money-sym" style={{fontSize:14}}>₹</span>
+                  <input type="number" placeholder="Annual amount (₹)" value={form[inv.amtKey]} onChange={e=>upd(inv.amtKey,e.target.value)} style={{paddingLeft:"28px",fontSize:14,padding:"9px 12px 9px 28px"}}/>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+      <div className="mt-4">
+        <label>Savings / FD interest earned this year (₹)</label>
+        <div className="money-wrap"><span className="money-sym">₹</span>
+          <input type="number" placeholder="0 if unsure" value={form.savings_interest} onChange={e=>upd("savings_interest",e.target.value)}/>
+        </div>
+        <div className="hint">Check your bank passbook. Enter 0 if not sure.</div>
+      </div>
+    </div>
+  );
+}
+
+function StepHealth({form,upd}){
+  const hasParents=parseFloat(form.health_parents||0)>0;
+  return(
+    <div>
+      <span className="step-emoji">🏥</span>
+      <div className="step-title">Health insurance</div>
+      <div className="step-sub">Premiums directly cut your taxable income. Even a basic policy helps.</div>
+      <label>Annual premium — yourself &amp; family (₹)</label>
+      <div className="money-wrap"><span className="money-sym">₹</span>
+        <input type="number" placeholder="0 if no policy" value={form.health_self} onChange={e=>upd("health_self",e.target.value)}/>
+      </div>
+      <div className="hint">The yearly amount you pay to keep the policy active.</div>
+      <div className="mt-6">
+        <label>Parents' annual health insurance premium (₹) — 0 if not applicable</label>
+        <div className="money-wrap"><span className="money-sym">₹</span>
+          <input type="number" placeholder="0" value={form.health_parents} onChange={e=>upd("health_parents",e.target.value)}/>
+        </div>
+      </div>
+      {hasParents&&(
+        <div className="mt-4 fade-up">
+          <label>Are your parents 60 or older?</label>
+          <div className="yn-row">
+            <button className={`chip ${form.senior_parents===true?"on":""}`}  onClick={()=>upd("senior_parents",true)}>Yes, 60+</button>
+            <button className={`chip ${form.senior_parents===false?"on":""}`} onClick={()=>upd("senior_parents",false)}>No</button>
+          </div>
+          {form.senior_parents===true&&<div className="hint fade-up" style={{color:"#22c55e"}}>✓ Deduction limit doubles to ₹50,000 for senior parents</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Loading(){
+  return(
+    <div className="loading">
+      <div className="spinner"/>
+      <div>Running tax inference engine...</div>
+      <div style={{fontSize:12,marginTop:8,color:"#374151"}}>Applying knowledge base rules · Forward chaining</div>
+    </div>
+  );
+}
+
+function ErrorBox({msg,onRedo}){
+  return(
+    <div>
+      <div className="error-box">
+        <div style={{fontSize:36,marginBottom:12}}>⚠️</div>
+        <div style={{fontWeight:600,marginBottom:8}}>Calculation error</div>
+        <div style={{fontSize:13,color:"#9ca3af",marginBottom:16}}>Something went wrong in the tax engine.</div>
+        <div style={{fontSize:12,color:"#6b7280"}}>Error: {msg}</div>
+      </div>
+      <button className="btn-ghost" style={{width:"100%",marginTop:14,textAlign:"center"}} onClick={onRedo}>↩ Try Again</button>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
