@@ -322,7 +322,7 @@ class TaxSavingAgent:
             "savings_interest": plain_answers.get("savings_interest", 0),
         }
 
-    # ── REASON: fire all rules via inference engine ───────────────────────
+    
 
     def reason(self, percepts: dict) -> dict:
         engine = InferenceEngine(self.kb)
@@ -379,7 +379,6 @@ class TaxSavingAgent:
 
         suggestions = []
         if gap_80c > 2000:
-            extra_saving = round(gap_80c * 0.20)
             instruments  = []
             if percepts["elss"] == 0: instruments.append("ELSS mutual fund (3-yr lock-in, good returns)")
             if percepts["ppf"]  == 0: instruments.append("PPF (safe, post office, 15-yr)")
